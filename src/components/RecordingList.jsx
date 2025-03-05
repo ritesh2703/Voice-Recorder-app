@@ -63,8 +63,8 @@ const RecordingList = ({ recordings, setRecordings, darkMode }) => {
         </select>
       </div>
 
-      {/* Grid Layout for Audio */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto max-h-96 p-2">
+      {/* Scrollable Grid Layout for Audio */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto max-h-50 p-2 scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-200">
         {filteredRecordings.length > 0 ? (
           filteredRecordings.map((rec, index) => (
             <div
@@ -81,7 +81,7 @@ const RecordingList = ({ recordings, setRecordings, darkMode }) => {
                   </div>
                 </div>
 
-                {/* Buttons (same background as container) */}
+                {/* Buttons */}
                 <div className="flex gap-2 p-1 rounded-lg">
                   <button
                     onClick={() => downloadRecording(rec.url, rec.name)}
