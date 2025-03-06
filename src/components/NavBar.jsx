@@ -13,7 +13,7 @@ const NavBar = ({ darkMode, toggleTheme }) => {
         className={`px-4 py-2 rounded-md font-bold shadow-md transition-all duration-300
           ${darkMode ? "bg-yellow-300 text-yellow-300 border border-yellow-400" : "bg-gray-900 text-yellow-300 border border-gray-700"}`}
       >
-        {darkMode ? "☀ Light Mode" : "🌙 Dark Mode"}
+        {darkMode ? "☀ " : "🌙"}
       </button>
     </nav>
   );
