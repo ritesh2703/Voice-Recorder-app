@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { FaMicrophone } from "react-icons/fa";
-import { saveRecording, getRecordings } from "../utils/storage"; // Import getRecordings
+import { saveRecording, getRecordings } from "../utils/storage";
 import RecordingList from "./RecordingList";
-import Controls from "./Controls"; // Import Controls component
+import Controls from "./Controls";
 import NavBar from "./NavBar";
 
 const Recorder = () => {
@@ -14,10 +14,9 @@ const Recorder = () => {
   const mediaRecorderRef = useRef(null);
   const audioChunks = useRef([]);
 
-  // Load stored recordings and theme when the component mounts
   useEffect(() => {
     const savedRecordings = getRecordings();
-    setRecordings(savedRecordings); // Load recordings from localStorage
+    setRecordings(savedRecordings);
 
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme) {
@@ -25,7 +24,6 @@ const Recorder = () => {
     }
   }, []);
 
-  // Update body class and localStorage when darkMode changes
   useEffect(() => {
     document.body.className = darkMode ? "dark" : "light";
     localStorage.setItem("theme", darkMode ? "dark" : "light");
@@ -36,11 +34,6 @@ const Recorder = () => {
   };
 
   const startRecording = async () => {
-    if (!recordingName.trim()) {
-      alert("Please enter a name for the recording before starting.");
-      return;
-    }
-
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
@@ -53,15 +46,16 @@ const Recorder = () => {
         const audioBlob = new Blob(audioChunks.current, { type: "audio/mp3" });
         const url = URL.createObjectURL(audioBlob);
         const timestamp = new Date().toLocaleString();
-
-        const newRecording = { name: recordingName, url, timestamp };
+        
+        const defaultName = `Recording #${recordings.length + 1}`;
+        const newRecording = { name: recordingName.trim() || defaultName, url, timestamp };
         const updatedRecordings = [...recordings, newRecording];
 
         setRecordings(updatedRecordings);
-        saveRecording(newRecording); // Save to localStorage
+        saveRecording(newRecording);
         setAudioURL(url);
-        setRecordingName(""); // Clear input after recording
-        audioChunks.current = []; // Clear audio chunks for the next recording
+        setRecordingName("");
+        audioChunks.current = [];
       };
 
       mediaRecorder.start();
@@ -76,7 +70,7 @@ const Recorder = () => {
   const stopRecording = () => {
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop();
-      mediaRecorderRef.current.stream.getTracks().forEach((track) => track.stop()); // Stop all tracks
+      mediaRecorderRef.current.stream.getTracks().forEach((track) => track.stop());
       setRecording(false);
     }
   };
@@ -102,16 +96,14 @@ const Recorder = () => {
         <FaMicrophone className={`text-6xl ${recording ? "text-red-500" : darkMode ? "text-white" : "text-black"}`} />
       </div>
 
-      {/* Input for Recording Name */}
       <input
         type="text"
-        placeholder="Enter recording name"
+        placeholder="Enter recording name (optional)"
         value={recordingName}
         onChange={(e) => setRecordingName(e.target.value)}
         className="mt-6 px-3 py-2 border rounded-lg w-72 bg-gray-100 dark:bg-gray-700 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
 
-      {/* Start/Stop Button */}
       <div className="w-full flex justify-center p-4">
         <Controls
           recording={recording}
@@ -120,7 +112,6 @@ const Recorder = () => {
         />
       </div>
 
-      {/* Audio Player */}
       {audioURL && (
         <div className="mt-4 flex flex-col items-center">
           <div className="bg-gray-800 p-3 rounded-lg shadow-md flex items-center gap-4">
@@ -131,7 +122,6 @@ const Recorder = () => {
         </div>
       )}
 
-      {/* Recording List */}
       <RecordingList recordings={recordings} setRecordings={setRecordings} darkMode={darkMode} />
     </div>
   );
