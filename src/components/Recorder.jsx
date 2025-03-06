@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { FaMicrophone } from "react-icons/fa";
 import { saveRecording, getRecordings } from "../utils/storage"; // Import getRecordings
 import RecordingList from "./RecordingList";
+import Controls from "./Controls"; // Import Controls component
 import NavBar from "./NavBar";
 
 const Recorder = () => {
@@ -13,19 +14,18 @@ const Recorder = () => {
   const mediaRecorderRef = useRef(null);
   const audioChunks = useRef([]);
 
-  // Load stored recordings when the component mounts
+  // Load stored recordings and theme when the component mounts
   useEffect(() => {
     const savedRecordings = getRecordings();
     setRecordings(savedRecordings); // Load recordings from localStorage
-  }, []);
 
-  useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme) {
       setDarkMode(savedTheme === "dark");
     }
   }, []);
 
+  // Update body class and localStorage when darkMode changes
   useEffect(() => {
     document.body.className = darkMode ? "dark" : "light";
     localStorage.setItem("theme", darkMode ? "dark" : "light");
@@ -41,45 +41,54 @@ const Recorder = () => {
       return;
     }
 
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const mediaRecorder = new MediaRecorder(stream);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
 
-    mediaRecorder.ondataavailable = (event) => {
-      audioChunks.current.push(event.data);
-    };
+      mediaRecorder.ondataavailable = (event) => {
+        audioChunks.current.push(event.data);
+      };
 
-    mediaRecorder.onstop = () => {
-      const audioBlob = new Blob(audioChunks.current, { type: "audio/mp3" });
-      const url = URL.createObjectURL(audioBlob);
-      const timestamp = new Date().toLocaleString();
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunks.current, { type: "audio/mp3" });
+        const url = URL.createObjectURL(audioBlob);
+        const timestamp = new Date().toLocaleString();
 
-      const newRecording = { name: recordingName, url, timestamp };
-      const updatedRecordings = [...recordings, newRecording];
+        const newRecording = { name: recordingName, url, timestamp };
+        const updatedRecordings = [...recordings, newRecording];
 
-      setRecordings(updatedRecordings);
-      saveRecording(newRecording); // Save to localStorage
-      setAudioURL(url);
-      setRecordingName(""); // Clear input after recording
-    };
+        setRecordings(updatedRecordings);
+        saveRecording(newRecording); // Save to localStorage
+        setAudioURL(url);
+        setRecordingName(""); // Clear input after recording
+        audioChunks.current = []; // Clear audio chunks for the next recording
+      };
 
-    mediaRecorder.start();
-    setRecording(true);
-    mediaRecorderRef.current = mediaRecorder;
+      mediaRecorder.start();
+      setRecording(true);
+      mediaRecorderRef.current = mediaRecorder;
+    } catch (error) {
+      console.error("Error accessing microphone:", error);
+      alert("Failed to access microphone. Please check permissions.");
+    }
   };
 
   const stopRecording = () => {
-    mediaRecorderRef.current?.stop();
-    setRecording(false);
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current.stream.getTracks().forEach((track) => track.stop()); // Stop all tracks
+      setRecording(false);
+    }
   };
 
   return (
     <div
       className={`min-h-screen flex flex-col items-center 
-      ${
-        darkMode
-          ? "bg-gradient-to-r from-gray-800 via-gray-900 to-black text-white"
-          : "bg-gradient-to-r from-blue-400 via-purple-400 to-indigo-500 text-black"
-      }`}
+        ${
+          darkMode
+            ? "bg-gradient-to-r from-gray-800 via-gray-900 to-black text-white"
+            : "bg-gradient-to-r from-blue-400 via-purple-400 to-indigo-500 text-black"
+        }`}
     >
       <NavBar darkMode={darkMode} toggleTheme={toggleTheme} />
 
@@ -90,7 +99,7 @@ const Recorder = () => {
             <div className="absolute w-32 h-32 bg-red-300 rounded-full opacity-30 animate-ping"></div>
           </>
         )}
-        <FaMicrophone className={`text-6xl ${recording ? "text-red-500" : "text-white"}`} />
+        <FaMicrophone className={`text-6xl ${recording ? "text-red-500" : darkMode ? "text-white" : "text-black"}`} />
       </div>
 
       {/* Input for Recording Name */}
@@ -99,22 +108,16 @@ const Recorder = () => {
         placeholder="Enter recording name"
         value={recordingName}
         onChange={(e) => setRecordingName(e.target.value)}
-        className="mt-6 px-3 py-2 border rounded-lg w-72 bg-gray-100 dark:bg-gray-700 text-black dark:text-white"
+        className="mt-6 px-3 py-2 border rounded-lg w-72 bg-gray-100 dark:bg-gray-700 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
 
       {/* Start/Stop Button */}
       <div className="w-full flex justify-center p-4">
-        <button
-          onClick={recording ? stopRecording : startRecording}
-          className={`px-6 py-3 text-white font-bold rounded-lg transition-all duration-300 shadow-lg 
-          ${
-            recording
-              ? "bg-red-500 hover:bg-red-600"
-              : "bg-green-500 hover:bg-green-600"
-          }`}
-        >
-          {recording ? "Stop Recording" : "Start Recording"}
-        </button>
+        <Controls
+          recording={recording}
+          startRecording={startRecording}
+          stopRecording={stopRecording}
+        />
       </div>
 
       {/* Audio Player */}
@@ -128,6 +131,7 @@ const Recorder = () => {
         </div>
       )}
 
+      {/* Recording List */}
       <RecordingList recordings={recordings} setRecordings={setRecordings} darkMode={darkMode} />
     </div>
   );

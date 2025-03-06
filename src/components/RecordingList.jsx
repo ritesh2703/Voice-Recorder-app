@@ -37,7 +37,7 @@ const RecordingList = ({ recordings, setRecordings, darkMode }) => {
     });
 
   return (
-    <div className={`mt-6 w-full max-w-4xl mx-auto p-4 rounded-lg shadow-md ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-black'}`}>
+    <div className={`mt-6 w-full max-w-7xl mx-auto p-4 rounded-lg shadow-md ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-black'}`}>
       <h2 className="text-xl font-semibold mb-3 text-center">Saved Recordings</h2>
 
       {/* Search & Sorting */}
@@ -64,7 +64,7 @@ const RecordingList = ({ recordings, setRecordings, darkMode }) => {
       </div>
 
       {/* Scrollable Grid Layout for Audio */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto max-h-50 p-2 scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-200">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 overflow-y-auto max-h-50 p-2 scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-200">
         {filteredRecordings.length > 0 ? (
           filteredRecordings.map((rec, index) => (
             <div
